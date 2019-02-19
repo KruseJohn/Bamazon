@@ -16,7 +16,7 @@ Each item that is purchased is subtracted from the stock quantity column after a
 <h4> Within the manager portal, you can view all inventory in the store, view all low 
 inventory (less than 5 items in stock), choose to add to the inventory of a product, 
 add an entirely new item to your inventory, or remove a product altogether...</h4>
-<br>
+
 <h4> First, let's choose to view the existing inventory, then we will view the products which are low in stock...</h4>
 
 ``` node bamazonManager.js ```
