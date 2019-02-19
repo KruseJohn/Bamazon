@@ -2,6 +2,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 //require("console.table");
+const chalk = require("chalk");
 
 // Initialize the connection
 var connection = mysql.createConnection({
@@ -23,9 +24,7 @@ connection.connect(function (err) {
 function showInventory() {
     connection.query("SELECT * FROM products", function (err, response) {
         if (err) throw err;
-        // Show the table in the terminal
-        // console.table(response);
-        // Prompt for user to select product
+        // Prompt for user to make a choice
         promptUpdate(response);
     });
 }
@@ -35,7 +34,7 @@ function promptUpdate(products) {
         name: "action",
         type: "list",
         message: "\n Hello Manager!  What would you like to do? \n",
-        choices: ["View Products for Sale...", "View Low Inventory...", "Add to Inventory...", "Add New Product...", "Remove a Product..."]
+        choices: ["View Products for Sale...", "View Low Inventory...", "Add to Inventory...", "Add New Product...", "Remove a Product...", "QUIT"]
     }]).then(function (answers) {
 
         switch (answers.action) {
@@ -60,29 +59,28 @@ function promptUpdate(products) {
             case "Remove a Product...":
                 deleteProduct();
                 break;
+
+            case "QUIT":
+                EXIT();
+                break;
         }
     });
 }
-
+    // function to view low inventory
 function viewLow() {
     connection.query("SELECT * FROM products WHERE stock_quantity <= 5", function (err, response) {
         if (err) throw err;
-        var quantity = response.stock_quantity;
-        if (quantity <= 5) {
-            console.table(response);
-
-        } else {
-            console.log("\n *******   You have more than 5 of each product in stock... \n");
-        }
+         console.table(response);
         showInventory();
     });
 }
-
+    // function to add to inventory
 function addRequest() {
     inquirer.prompt([{
             type: "input",
             name: "ID",
             message: "\n What is the ID of the item you wish to add to? \n",
+            // make sure user enters a number
             validate: function (answer) {
                 return !isNaN(answer);
             }
@@ -91,6 +89,7 @@ function addRequest() {
             type: "input",
             name: "Quantity",
             message: "How many of the item would you like to add? \n",
+            // make sure the user supplies a number greater than 0
             validate: function (answer) {
                 return answer > 0;
             }
@@ -101,19 +100,20 @@ function addRequest() {
         addQuantity(productID, quantityAdded);
     });
 }
-
+    // function to add the amount requested to inventory
 function addQuantity(ID, Quantity) {
     connection.query("SELECT * FROM products WHERE item_id = " + ID, function (err, response) {
         if (err) throw err;
         if (Quantity > 0) {
             var totalProduct = response[0].stock_quantity + Quantity;
-            console.log("\n *******   Successfully added " + Quantity + " of '" + response[0].product + "'.  You now have a total of " + totalProduct + " in stock... \n");
+            console.log(chalk.bold.yellowBright("\n *******   Successfully added " + Quantity + " of '" + response[0].product + "'.  You now have a total of " + totalProduct + " in stock... \n"));
+            console.log("_________________________________________________________________________________________________");
             connection.query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?", [Quantity, ID]);
         }
         showInventory();
     });
 }
-
+    // function to add a new product to inventory
 function addNewProduct() {
     inquirer.prompt([{
             type: "input",
@@ -129,6 +129,7 @@ function addNewProduct() {
             type: "input",
             name: "price",
             message: "What is the price per product? \n",
+            // make sure the user uses a valid dollar amount
             validate: function (answer) {
                 return answer > 0;
             }
@@ -137,24 +138,26 @@ function addNewProduct() {
             type: "input",
             name: "quantity",
             message: "How many do you want to add to the present stock?",
+            // make sure the user enters a number
             validate: function (answer) {
                 return !isNaN(answer);
             }
         }
     ]).then(commitNewItem);
 }
-
+    // function to commit the new product into inventory
 function commitNewItem(answer) {
     connection.query("INSERT INTO products (product, department, price, stock_quantity) VALUES(?, ?, ?, ?)",
         [answer.product, answer.department, answer.price, answer.quantity],
         function (err, response) {
             if (err) throw err;
-            console.log("\n *******   '" + answer.product + "' successfully added to the inventory! \n");
+            console.log(chalk.bold.yellowBright("\n *******   '" + answer.product + "' successfully added to the inventory! \n"));
+            console.log("_____________________________________________________________________________________________");
             showInventory();
         }
     );
 }
-
+    // function to select a product to delete from inventory
 function deleteProduct() {
     inquirer.prompt([{
         name: "ID",
@@ -165,9 +168,17 @@ function deleteProduct() {
         removeFromInventory(id);
     });
 }
-
+    // function to finally delete from inventory
 function removeFromInventory(id) {
     connection.query("DELETE FROM products WHERE item_id = " + id);
-    console.log("\n *******   Item ID number '" + id + "' successfully removed from inventory... \n");
+    console.log(chalk.bold.yellowBright("\n *******   Item ID number '" + id + "' successfully removed from inventory... \n"));
+    console.log("______________________________________________________________________________________________________");
     showInventory();
+}
+    // function to exit the program
+function EXIT() {
+    console.log("\n----------------------------------------------------------------\n")
+        console.log(chalk.bold.yellowBright("\n*******   GOODBYE!   *******\n"));
+        console.log("_____________________________________________________________________________________________________________");
+        process.exit(0);
 }

@@ -2,6 +2,8 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 // require("console.table");
+const chalk = require("chalk");
+
 
 // Initialize the connection
 var connection = mysql.createConnection({
@@ -29,12 +31,13 @@ function showInventory() {
         promptUser();
     });
 }
-
+    // function to ask user to select a product to purchase
 function promptUser() {
     inquirer.prompt([{
             name: "ID",
             type: "input",
             message: "\n  Please enter the item ID of the product you would like to purchase... \n",
+            // make sure user enters a number
             validate: function (answer) {
                 return !isNaN(answer);
             }
@@ -43,6 +46,7 @@ function promptUser() {
             name: "Quantity",
             type: "input",
             message: "\n  How many would you like to purchase?   [Q to Quit]",
+            // determine if user is asking for more items than in stock, and if user would like to exit the program
             validate: function (answer) {
                 return answer > 0 || answer.toLowerCase() === "q";
             }
@@ -54,27 +58,30 @@ function promptUser() {
         purchaseOrder(IDinput, amount);
     });
 };
-
+    // function to purchase the item and remove it from inventory 
 function purchaseOrder(ID, amountRequested) {
     connection.query("SELECT * FROM products WHERE item_id = " + ID, function (err, response) {
         if (err) throw err;
         if (amountRequested <= response[0].stock_quantity) {
             var totalCost = response[0].price * amountRequested;
             console.log("\n*******************************************************\n");
-            console.log("*******   Thank You!  Your total cost for " + amountRequested + " of your item '" + response[0].product + "' is $" + totalCost + ".\n");
+            console.log(chalk.bold.yellowBright("*******   Thank You!  Your total cost for " + amountRequested + " of your item '" + response[0].product + "' is $" + totalCost + ".\n"));
+            console.log("_________________________________________________________________________________________________________");
             connection.query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE item_id = ?", [amountRequested, ID]);
         } else {
             console.log("\n*******************************************************\n");
-            console.log("*******   INSUFFICIENT SUPPLY IN STOCK!!!  Please try again below...\n");
+            console.log(chalk.bold.redBright("*******   INSUFFICIENT SUPPLY IN STOCK!!!  Please try again below...\n"));
+            console.log("_________________________________________________________________________________________________________");
         };
         showInventory();
     });
 };
-
+    // function to exit the program
 function Quit(Quantity) {
     if (Quantity.toLowerCase() === "q") {
         console.log("\n----------------------------------------------------------------\n")
-        console.log("\n*******   GOODBYE!   *******\n");
+        console.log(chalk.bold.yellowBright("\n*******   GOODBYE!   *******\n"));
+        console.log("_____________________________________________________________________________________________________________");
         process.exit(0);
     }
 }
