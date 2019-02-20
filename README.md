@@ -10,7 +10,7 @@ Each item that is purchased is subtracted from the stock quantity column after a
 
 ``` node bamazonCustomer.js ```
 
-![customer portal](https://github.com/KruseJohn/Bamazon/blob/master/images/customer.gif)
+![customer portal](https://github.com/KruseJohn/Bamazon/blob/master/images/customer1.gif)
 <br>
 <br>
 <br>
